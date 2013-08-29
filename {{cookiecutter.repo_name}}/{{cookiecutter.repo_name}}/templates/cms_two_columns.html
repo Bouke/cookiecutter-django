@@ -1,0 +1,14 @@
+{% raw %}{% extends "base.html" %}
+{% load cms_tags %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-md-6">
+      {% placeholder left %}
+    </div>
+    <div class="col-md-6">
+      {% placeholder right %}
+    </div>
+  </div>
+{% endblock %}
+{% endraw %}

@@ -1,36 +1,25 @@
-cookiecutter-django
+cookiecutter-django-cms
 =======================
 
-A cookiecutter_ template for Django.
+A cookiecutter_ template for Django CMS.
 
 .. _cookiecutter: https://github.com/audreyr/cookiecutter
 
 Features
 ---------
 
-* Cutting edge: For Django 1.6 and other bleeding edge stuff
+* Django 1.5
+* Django CMS 2.4
 * Twitter Bootstrap 3
-* AngularJS
-* Registration via django-allauth
-* User avatars via django-avatar
-* Procfile for deploying to Heroku
-* Heroku optimized requirements
-* Basic caching setup
+* Database agnostic (configured by dj-database-url)
 
 Constraints
 -----------
 
 * Only maintained 3rd party libraries are used.
-* PostgreSQL everywhere
 * Environment variables for configuration (This won't work with Apache/mod_wsgi)
-
-Caution: Bleeding Edge Requirements
-------------------------------------
-
-The cookiecutter-django project is bleeding edge in that it uses unreleased versions of several packages like Django,
-South, django-crispy-forms, django-avatar, and more. 
-
-Consider yourself warned.
+* Optimized for Heroku deployment
+* File uploads to Amazon S3
 
 Usage
 ------
@@ -44,7 +33,7 @@ First, get cookiecutter. Trust me, it's awesome::
 
 Now run it against this repo::
 
-    $ cookiecutter https://github.com/pydanny/cookiecutter-django.git
+    $ cookiecutter https://github.com/bouke/cookiecutter-django-cms.git
 
 You'll be prompted for some questions, answer them, then it will create a Django project for you.
 
@@ -53,19 +42,17 @@ You'll be prompted for some questions, answer them, then it will create a Django
 
 It prompts you for questions. Answer them::
 
-    Cloning into 'cookiecutter-django'...
+    Cloning into 'cookiecutter-django-cms'...
     remote: Counting objects: 49, done.
     remote: Compressing objects: 100% (33/33), done.
     remote: Total 49 (delta 6), reused 48 (delta 5)
     Unpacking objects: 100% (49/49), done.
     full_name (default is "Your full name here")? Daniel Greenfeld
     email (default is "you@example.com")? pydanny@gmail.com
-    project_name (default is "dj-project")? redditclone
+    project_name (default is "dj-project")? Reddit Clone
     app_name (default is "djproject")? redditclone
     project_short_description (default is "Your project description goes here")? A reddit clone.
-    release_date (default is "2013-08-15")? 2013-08-15
     year (default is "2013")? 2013
-    version (default is "0.1.0")? 0.3.0
 
 Enter the project and take a look around::
 
@@ -83,7 +70,7 @@ Create a GitHub repo and push it there::
 Now take a look at your repo. Awesome, right?
 
 It's time to write the code!!!
-    
+
 
 "Your Stuff"
 -------------
@@ -105,7 +92,7 @@ It's up to you whether or not to rename your fork.
 
 If you do rename your fork, I encourage you to submit it to the following places:
 
-* cookiecutter_ so it gets listed in the README as a template. 
+* cookiecutter_ so it gets listed in the README as a template.
 * The cookiecutter grid_ on Django Packages.
 
 .. _cookiecutter: https://github.com/audreyr/cookiecutter
@@ -115,4 +102,4 @@ Or Submit a Pull Request
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 I also accept pull requests on this, if they're small, atomic, and if they make my own project development
-experience better. 
+experience better.

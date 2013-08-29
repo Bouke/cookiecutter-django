@@ -14,6 +14,8 @@ import os
 from os.path import join
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+_ = lambda s: s
+
 ########## DEBUG CONFIGURATION
 if os.environ.get("DATABASE_URL", None):
 
@@ -60,8 +62,8 @@ DATABASES = {'default': dj_database_url.config()}
 if DATABASES == {'default': {}}:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': "{{cookiecutter.repo_name}}",
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': join(BASE_DIR, 'default.sqlite3'),
         }
     }
 ########## END DATABASE CONFIGURATION
@@ -69,10 +71,14 @@ if DATABASES == {'default': {}}:
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
-TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = 'Europe/Amsterdam'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
+
+LANGUAGES = (
+    ('en', _('English')),
+)
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1
@@ -96,6 +102,7 @@ MEDIA_ROOT = join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 ########## END MEDIA CONFIGURATION
 
+
 ########## MIDDLEWARE CONFIGURATION
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -104,13 +111,18 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'cms.middleware.page.CurrentPageMiddleware',
+    'cms.middleware.user.CurrentUserMiddleware',
+    'cms.middleware.toolbar.ToolbarMiddleware',
+    'cms.middleware.language.LanguageCookieMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = 'staticfiles'
+STATIC_ROOT = join(os.path.dirname(BASE_DIR), 'static')
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = '/static/'
@@ -146,26 +158,31 @@ DJANGO_APPS = (
 )
 THIRD_PARTY_APPS = (
     'south',  # Database migration helpers:
-    'crispy_forms',  # Form layouts
-    'avatar',  # for user avatars
+    'cms',
+    'mptt',
+    'menus',
+    'sekizai',
+    'cms.plugins.googlemap',
+    'cms.plugins.link',
+    'cms.plugins.teaser',
+    'cms.plugins.text',
+    'easy_thumbnails',
+    'filer',
+    'cmsplugin_filer_file',
+    'cmsplugin_filer_folder',
+    'cmsplugin_filer_image',
+    'cmsplugin_filer_teaser',
+    'cmsplugin_filer_video',
+    'reversion',
 )
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
-    'users',  # custom users app
     # Your stuff: custom apps go here
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
-INSTALLED_APPS += (
-    # Needs to come last for now because of a weird edge case between
-    #   South and allauth
-    'allauth',  # registration
-    'allauth.account',  # registration
-    'allauth.socialaccount',  # registration
-)
 ########## END APP CONFIGURATION
 
 
@@ -176,52 +193,21 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 ########## End URL Configuration
 
-########## django-secure
-SECURE = False
-if SECURE:
-    INSTALLED_APPS += ("djangosecure", )
-
-    # set this to 60 seconds and then to 518400 when you can prove it works
-    SECURE_HSTS_SECONDS = 60
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_FRAME_DENY = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SECURE_SSL_REDIRECT = True
-########## end django-secure
-
-
-########## AUTHENTICATION CONFIGURATION
-AUTHENTICATION_BACKENDS = (
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-)
-
-# Some really nice defaults
-ACCOUNT_AUTHENTICATION_METHOD = "username"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-########## END AUTHENTICATION CONFIGURATION
-
-
-########## Custom user app defaults
-# Select the correct user model
-AUTH_USER_MODEL = "users.User"
-LOGIN_REDIRECT_URL = "users:redirect"
-########## END Custom user app defaults
-
 
 ########## SLUGLIFIER
 AUTOSLUG_SLUGIFY_FUNCTION = "slugify.slugify"
 ########## END SLUGLIFIER
 
 
+########## AUTHENTICATION CONFIGURATION
+LOGIN_URL = 'admin:index'
+########## END AUTHENTICATION CONFIGURATION
+
+
 ################## PRODUCTION SETTINGS
 if DEBUG:
-    EMAIL_HOST = "localhost"
-    EMAIL_PORT = 1025
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
     MIDDLEWARE_CLASSES += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
     INSTALLED_APPS += ('debug_toolbar',)
 
@@ -244,23 +230,18 @@ else:
     INSTALLED_APPS += ("gunicorn", )
 
     ########## STORAGE CONFIGURATION
-    from S3 import CallingFormat
-    from os import environ
     # See: http://django-storages.readthedocs.org/en/latest/index.html
     INSTALLED_APPS += (
         'storages',
     )
 
     # See: http://django-storages.readthedocs.org/en/latest/backends/amazon-S3.html#settings
-    STATICFILES_STORAGE = DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
     # See: http://django-storages.readthedocs.org/en/latest/backends/amazon-S3.html#settings
-    AWS_CALLING_FORMAT = CallingFormat.SUBDOMAIN
-
-    # See: http://django-storages.readthedocs.org/en/latest/backends/amazon-S3.html#settings
-    AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID', '')
-    AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY', '')
-    AWS_STORAGE_BUCKET_NAME = environ.get('AWS_STORAGE_BUCKET_NAME', '')
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', '')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', '')
+    AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', '')
     AWS_AUTO_CREATE_BUCKET = True
     AWS_QUERYSTRING_AUTH = False
 
@@ -270,30 +251,31 @@ else:
         'Cache-Control': 'max-age=%d, s-maxage=%d, must-revalidate' % (AWS_EXPIREY,
             AWS_EXPIREY)
     }
-
-    # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-url
-    STATIC_URL = 'https://s3.amazonaws.com/%s/' % AWS_STORAGE_BUCKET_NAME
     ########## END STORAGE CONFIGURATION
 
     ########## EMAIL
-    DEFAULT_FROM_EMAIL = environ.get('DEFAULT_FROM_EMAIL',
-            '{{cookiecutter.project_name}} <{{cookiecutter.project_name}}-noreply@{{cookiecutter.doman_name}}>')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL',
+            '{{cookiecutter.project_name}} <{{cookiecutter.repo_name}}-noreply@{{cookiecutter.domain_name}}>')
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = environ.get('EMAIL_HOST', 'smtp.sendgrid.com')
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.com')
     EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD', '')
     EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME', '')
-    EMAIL_PORT = environ.get('EMAIL_PORT', 587)
-    EMAIL_SUBJECT_PREFIX = environ.get('EMAIL_SUBJECT_PREFIX', '[{{cookiecutter.project_name}}] ')
+    EMAIL_PORT = os.environ.get('EMAIL_PORT', 587)
+    EMAIL_SUBJECT_PREFIX = os.environ.get('EMAIL_SUBJECT_PREFIX', '[{{cookiecutter.project_name}}] ')
     EMAIL_USE_TLS = True
     SERVER_EMAIL = EMAIL_HOST_USER
     ########## END EMAIL
+
+    ########## CACHING
+    from memcacheify import memcacheify
+    CACHES = memcacheify()
+    ########## END CACHING
+
 
 ########## TEMPLATE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-context-processors
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
-    "allauth.account.context_processors.account",
-    "allauth.socialaccount.context_processors.socialaccount",
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
@@ -301,6 +283,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.tz',
     'django.contrib.messages.context_processors.messages',
     'django.core.context_processors.request',
+    'cms.context_processors.media',
+    'sekizai.context_processors.sekizai',
     # Your stuff: custom template context processers go here
 )
 
@@ -357,10 +341,12 @@ LOGGING = {
 }
 ########## END LOGGING CONFIGURATION
 
-########## CACHING
-from memcacheify import memcacheify
-CACHES = memcacheify()
-########## END CACHING
+
+########## CMS CONFIGURATION
+CMS_TEMPLATES = (
+    ('cms_two_columns.html', 'Two Columns'),
+)
+########## END CMS CONFIGURATION
 
 
 ########## Your stuff: Below this line define 3rd party libary settings

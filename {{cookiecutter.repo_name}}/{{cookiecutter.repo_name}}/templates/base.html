@@ -1,8 +1,9 @@
-{% raw %}{% load staticfiles i18n %}<!DOCTYPE html>
+{% raw %}{% load staticfiles i18n cms_tags menu_tags sekizai_tags %}<!DOCTYPE html>
 <html lang="en" ng-app>
   <head>
     <meta charset="utf-8">
-    <title>{% block title %}{{ project_name }}{% endblock title %}</title>
+    <title>{% block title %}{% page_attribute "page_title" %}{% endblock %}</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -25,40 +26,27 @@
     <link href="{% static 'css/project.css' %}" rel="stylesheet">
     {% endblock %}
 
-    {% block angular %}
-      <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
-    {% endblock %}
-
+    {% render_block "css" %}
   </head>
 
   <body>
+    {% cms_toolbar %}
 
     <div class="header navbar">
       <div class="container">
         <a class="navbar-brand" href="/">{{cookiecutter.repo_name}}</a>
         <ul class="nav navbar-nav">
-          <li class="active"><a href="{% url 'home' %}">Home</a></li>
-          <li><a href="{% url 'about' %}">About</a></li>
-
-          {% if request.user.is_authenticated %}
-            <li><a href="{% url 'users:detail' request.user.username  %}">{% trans "My Profile" %}</a></li>
-            <li><a href="{% url 'account_logout' %}">{% trans "Logout" %}</a></li>
-          {% else %}
-            <li><a href="{% url 'account_signup' %}">{% trans "Sign Up" %}</a></li>
-            <li><a href="{% url 'account_login' %}">{% trans "Log In" %}</a></li>
-          {% endif %}
+          {% show_menu 0 0 %}
         </ul>
       </div>
     </div>
 
     <div class="container">
 
-      {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
+      {% block content %}{% endblock content %}
 
     </div> <!-- /container -->
-    
+
     {% block modal %}{% endblock modal %}
 
     <!-- Le javascript
@@ -76,6 +64,8 @@
       <!-- place project specific Javascript in this file -->
       <script src="{% static 'js/project.js' %}"></script>
     {% endblock javascript %}
+
+    {% render_block "js" %}
   </body>
 </html>
  {% endraw %}
